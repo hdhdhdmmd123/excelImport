@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>layui</title>
+    <link rel="stylesheet" type="text/css" href="css/base.css" />
+    <link rel="stylesheet" type="text/css" href="plugins/layui/css/layui.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <style type="text/css">
+      .none{
+        display:none;
+      }
+    </style>
+</head>
+<body>
+    <button id="btnImport">导入</button>
+    <!-- <input type="file" multiple id="import" class="none" accept=".jpg" /> -->
+    <input type="file" multiple id="import" class="none"  />
+    <!-- <ul id="ulBox"></ul> -->
+    <div id="box">
+      <table id="test"></table>
+    </div>
+    <script type="text/javascript" src="plugins/jQuery/jquery.min.js"></script>
+    <script type="text/javascript" src="plugins/xlsx/xlsx.full.js"></script>
+    <script type="text/javascript" src="plugins/layui/layui.js"></script>
+    <script type="text/javascript" src="plugins/backbone/template-web.js"></script>
+    <script type="text/javascript" src="plugins/backbone/underscore.js"></script>
+    <script type="text/javascript" src="plugins/backbone/backbone.js"></script>
+    <script type="text/javascript">
+      $('#import').on('change',function(e){
+        var files = e.target.files;
+        var fileReader = new FileReader();
+        fileReader.onload = function(ev) {
+            try {
+                var data = ev.target.result,
+                    workbook = XLSX.read(data, {
+                        type: 'binary'
+                    }), // 以二进制流方式读取得到整份excel表格对象
+                    persons = []; // 存储获取到的数据
+                    console.log(workbook)
+            } catch (e) {
+                console.log('文件类型不正确');
+                return;
+            }
+
+            // 表格的表格范围，可用于判断表头是否数量是否正确
+            var fromTo = '';
+            // 遍历每张表读取
+            for (var sheet in workbook.Sheets) {
+                if (workbook.Sheets.hasOwnProperty(sheet)) {
+                    fromTo = workbook.Sheets[sheet]['!ref'];
+                    console.log(fromTo);
+                    persons = persons.concat(XLSX.utils.sheet_to_json(workbook.Sheets[sheet]));
+                    // break; // 如果只取第一张表，就取消注释这行
+                }
+            }
+
+            console.log(persons);
+            console.log(JSON.stringify(persons));
+            // renderDom(persons)
+            //initTable(persons)
+
+        };
+
+        // 以二进制方式打开文件
+        fileReader.readAsBinaryString(files[0]);
+        // console.log(fileReader.readAsBinaryString(files[0]))
+      })
+      function renderDom(data){
+      
+        var html='';
+        $.each(data,function(index,item){
+          html+= '<li>\
+                    <p>\
+                      <span>'+item.id+'</span>\
+                      <span>'+item.name+'</span>\
+                      <span>'+item.age+'</span>\
+                      <span>'+item.aihao+'</span>\
+                    </p>\
+                  </li>';
+        })
+        $('#ulBox').html(html);
+      }
+
+      $('#btnImport').on('click',function(){
+        $('#import').click();
+      })
+
+      function initTable(data){
+        layui.use(['table'], function(){
+          table = layui.table //表格
+          table.render({
+            elem: '#test'
+            ,height: 500
+            // ,url: 'json/table.json' //数据接口
+            ,data:data
+            ,page: true //开启分页
+            ,cols: [[ //表头
+              {field: 'id', title: 'ID', width:80, sort: true, fixed: 'left'}
+              ,{field: 'name', title: '用户名', width:80}
+              ,{field: 'age', title: '年龄', width:80, sort: true}
+              ,{field: 'aihao', title: '爱好', width:80} 
+              
+            ]]
+          });
+
+        })
+      }
+    </script>
+</body>
+</html>
